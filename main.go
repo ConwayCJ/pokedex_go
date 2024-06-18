@@ -1,5 +1,11 @@
 package main
 
 func main() {
-	start()
+
+	cfg := &config{
+		next: "https://pokeapi.co/api/v2/location",
+		prev: "",
+	}
+
+	start(cfg)
 }
