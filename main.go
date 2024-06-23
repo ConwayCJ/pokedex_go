@@ -11,7 +11,7 @@ import (
 func main() {
 
 	cfg := &config{
-		next:  "https://pokeapi.co/api/v2/location",
+		next:  "https://pokeapi.co/api/v2/location-area",
 		prev:  "",
 		cache: *pokecache.NewCache(5 * time.Minute),
 	}

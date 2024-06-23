@@ -66,7 +66,7 @@ func fetchLocale(url string, cfg *config) (Locales, error) {
 
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, _ ...string) error {
 	next := cfg.next
 
 	res, err := fetchLocale(next, cfg)
@@ -74,17 +74,12 @@ func commandMap(cfg *config) error {
 		return errors.New("no more results")
 	}
 
-	for i, id := range res.Results {
-		fmt.Printf("%v: %s\n", i+1, id.Name)
-	}
-
-	cfg.next = res.Next
-	cfg.prev = res.Prev
+	printAndAdjustConfig(cfg, res)
 
 	return nil
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, _ ...string) error {
 	prev := cfg.prev
 
 	if prev == "" {
@@ -96,12 +91,17 @@ func commandMapb(cfg *config) error {
 		return errors.New("you're on the first page")
 	}
 
+	printAndAdjustConfig(cfg, res)
+
+	return nil
+}
+
+func printAndAdjustConfig(cfg *config, res Locales) {
+
 	for i, id := range res.Results {
 		fmt.Printf("%v: %s\n", i+1, id.Name)
 	}
 
 	cfg.next = res.Next
 	cfg.prev = res.Prev
-
-	return nil
 }

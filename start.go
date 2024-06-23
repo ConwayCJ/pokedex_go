@@ -12,7 +12,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, ...string) error
 }
 
 type config struct {
@@ -44,12 +44,18 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the names of the previous 20 location areas in the Pokemon world. Repeat command for previous 20.",
 			callback:    commandMapb,
 		},
+		"explore": {
+			name:        "explore <location-name>",
+			description: "Explores location name for pokemon",
+			callback:    commandExplore,
+		},
 	}
 }
 
-func sanitizeText(s string) string {
+func cleanInput(s string) []string {
 	s = strings.ToLower(s)
-	return s
+	words := strings.Fields(s)
+	return words
 }
 
 func start(cfg *config) {
@@ -60,17 +66,21 @@ func start(cfg *config) {
 
 		// wait for user input
 		scanner.Scan()
-		// get what user typed
-		userInput := scanner.Text()
-		// user to lowercase
-		userInput = sanitizeText(userInput)
+		// get what user text + sanitize input
+		userInput := cleanInput(scanner.Text())
+
+		commandName := userInput[0]
+		args := []string{}
+		if len(userInput) > 1 {
+			args = userInput[1:]
+		}
 
 		// get command from list of commands
-		command, exists := getCommands()[userInput]
+		command, exists := getCommands()[commandName]
 
 		// if command exists...
 		if exists {
-			err := command.callback(cfg)
+			err := command.callback(cfg, args...)
 
 			// if there's an error...
 			if err != nil {
