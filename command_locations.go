@@ -18,43 +18,68 @@ type Locales struct {
 	} `json:"results"`
 }
 
-func fetchLocale(url string) (*Locales, error) {
+func fetchLocale(url string, cfg *config) (Locales, error) {
+	// check if exists in cache, if exists - do something.
+
+	if val, found := cfg.cache.Get(url); found {
+		fmt.Println(">>>>>>using cached data<<<<<<")
+
+		var locale Locales
+
+		// unmarshal body
+		if err := json.Unmarshal(val, &locale); err != nil {
+			return Locales{}, fmt.Errorf("failed to unmarshal: %v", err)
+		}
+
+		cfg.next = locale.Next
+		cfg.prev = locale.Prev
+
+		return locale, nil
+
+	}
+
+	// by this point, doesn't exist in cache.
+	// make http request & add to cache
 	resp, err := http.Get(url)
 
 	if err != nil {
-		return nil, err
+		return Locales{}, nil
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return Locales{}, nil
 	}
 
 	var locales Locales
 	err = json.Unmarshal(body, &locales)
 	if err != nil {
-		return nil, err
+		return Locales{}, nil
 	}
 
-	return &locales, nil
+	cfg.next = locales.Next
+	cfg.prev = locales.Prev
+
+	cfg.cache.Add(url, body)
+	return locales, nil
 
 }
 
 func commandMap(cfg *config) error {
 	next := cfg.next
 
-	data, err := fetchLocale(next)
+	res, err := fetchLocale(next, cfg)
 	if err != nil {
 		return errors.New("no more results")
 	}
 
-	cfg.next = data.Next
-	cfg.prev = data.Prev
-
-	for i, id := range data.Results {
+	for i, id := range res.Results {
 		fmt.Printf("%v: %s\n", i+1, id.Name)
 	}
+
+	cfg.next = res.Next
+	cfg.prev = res.Prev
 
 	return nil
 }
@@ -62,18 +87,21 @@ func commandMap(cfg *config) error {
 func commandMapb(cfg *config) error {
 	prev := cfg.prev
 
-	data, err := fetchLocale(prev)
-	if err != nil {
-		return errors.New("no more previous results")
+	if prev == "" {
+		return errors.New("you're on the first page")
 	}
-	fmt.Println(data.Prev)
 
-	cfg.next = data.Next
-	cfg.prev = data.Prev
+	res, err := fetchLocale(prev, cfg)
+	if err != nil {
+		return errors.New("you're on the first page")
+	}
 
-	for i, id := range data.Results {
+	for i, id := range res.Results {
 		fmt.Printf("%v: %s\n", i+1, id.Name)
 	}
+
+	cfg.next = res.Next
+	cfg.prev = res.Prev
 
 	return nil
 }
