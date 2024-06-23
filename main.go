@@ -11,9 +11,10 @@ import (
 func main() {
 
 	cfg := &config{
-		next:  "https://pokeapi.co/api/v2/location-area",
-		prev:  "",
-		cache: *pokecache.NewCache(5 * time.Minute),
+		next:    "https://pokeapi.co/api/v2/location-area",
+		prev:    "",
+		cache:   *pokecache.NewCache(5 * time.Minute),
+		pokedex: make(map[string]Pokemon),
 	}
 
 	start(cfg)

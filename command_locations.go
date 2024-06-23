@@ -98,8 +98,8 @@ func commandMapb(cfg *config, _ ...string) error {
 
 func printAndAdjustConfig(cfg *config, res Locales) {
 
-	for i, id := range res.Results {
-		fmt.Printf("%v: %s\n", i+1, id.Name)
+	for _, id := range res.Results {
+		fmt.Printf(id.Name)
 	}
 
 	cfg.next = res.Next
